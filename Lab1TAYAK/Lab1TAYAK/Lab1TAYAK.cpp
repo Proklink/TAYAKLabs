@@ -1,24 +1,27 @@
 ﻿#include <iostream>
 #include <string>
-#include "String.h"
+#include <vector>
+#include <sstream>
+#include "Calc.h"
+#include "Tokenizer.h" 
 
 using namespace std;
 
-string String::func = "pow";
-map<string, uint8_t> String::priorities = { {"+", 1}, {"-", 1}, {"*", 2}, {"/", 2}, {func, 3} };
-
 int main()
 {
-    String source;
-        
-    source.get_source_string();
 
-    try {
-        cout << "Result = " << source.calculate();
+
+    Tokenizer tk;
+    tk.get_source_string();
+    bool ret = tk.split();
+    
+    if (!ret) {
+        cout << "split " << ret << endl;
+        return -1;
     }
-    catch (string mes) {
-        cout << mes << endl;
-    }
+
+    Calc calc(&tk.tokens);
+    cout << "Result = " << calc.calculate() << endl;
 
     return 0;
 }

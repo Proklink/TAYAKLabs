@@ -1,2 +1,4 @@
-﻿  String.cpp
-  Lab1TAYAK.vcxproj -> C:\Users\danil\source\repos\Lab1TAYAK\Debug\Lab1TAYAK.exe
+﻿  Tokenizer.cpp
+C:\Users\danil\Documents\MIET\TAYAK\Lab1TAYAK\Lab1TAYAK\Tokenizer.cpp(93,31): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+C:\Users\danil\Documents\MIET\TAYAK\Lab1TAYAK\Lab1TAYAK\Tokenizer.cpp(105,32): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+  Lab1TAYAK.vcxproj -> C:\Users\danil\Documents\MIET\TAYAK\Lab1TAYAK\Debug\Lab1TAYAK.exe

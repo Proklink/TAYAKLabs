@@ -139,11 +139,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Func.cpp" />
     <ClCompile Include="Lab1TAYAK.cpp" />
-    <ClCompile Include="String.cpp" />
+    <ClCompile Include="Calc.cpp" />
+    <ClCompile Include="Tokenizer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="String.h" />
+    <ClInclude Include="Calc.h" />
+    <ClInclude Include="Func.h" />
+    <ClInclude Include="Tokenizer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

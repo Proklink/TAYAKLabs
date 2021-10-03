@@ -124,22 +124,31 @@ int Tokenizer::is_func() {
     int pos = raw_string.find(func, index);
 
     if ((pos == index) && (raw_string[pos + 3] == '(')) {
-        int comma_count = 0;
+        //int comma_count = 0;//, open_br_count = 1, close_br_count = 0;
         size_t i;
-        size_t comma_pos = 0, close_bracket_pos = 0;
+        int comma_pos = -1, close_bracket_pos = 0, level = 1;
 
         for (i = pos + 4; i < raw_string.size(); i++) {
             if (raw_string[i] == ',') {
-                comma_count++;
-                comma_pos = i;
+                //comma_count++;
+                if (level == 1)
+                    comma_pos = i;
             }
+            if (raw_string[i] == '(') {
+                //open_br_count++;
+                level++;
+            }
+
             if (raw_string[i] == ')') {
+                //close_br_count++;
+                level--;
                 close_bracket_pos = i;
-                break;
             }
+            if (level == 0)
+                break;
         }
 
-        if (comma_count == 0 || close_bracket_pos == 0)
+        if (level != 0 || comma_pos == -1)
             return -1;
 
         //проверка на корректность аргументов 

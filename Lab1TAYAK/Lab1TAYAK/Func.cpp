@@ -1,4 +1,5 @@
 #include "Func.h"
+#include <cmath>
 
 std::string func = "pow";
 

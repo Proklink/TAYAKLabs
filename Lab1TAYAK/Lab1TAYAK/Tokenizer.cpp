@@ -26,13 +26,20 @@ bool Tokenizer::get_source_string() {
 
 void Tokenizer::add_num() {
     string number = "";
+    char ch = raw_string[index];
 
-    while (index < raw_string.size() && is_number(raw_string[index])) {
-        number += raw_string[index];
+    while (index < raw_string.size() && (is_number(ch) || is_separator(ch))) {
+        number += ch;
         index++;
+        ch = raw_string[index];
     }
-
-    tokens.push_back(number);
+    
+    if (minus) { 
+        tokens.push_back("-" + number);
+        minus = false;
+    } else {
+        tokens.push_back(number);
+    }
 }
 
 void Tokenizer::add_operator() {
@@ -72,7 +79,7 @@ void Tokenizer::add_func(int end_func) {
 }
 
 int Tokenizer::check_args(size_t comma_pos, size_t open_bracket_pos, size_t close_bracket_pos) {
-    int first, second;
+    double first, second;
     size_t begin_first_arg = open_bracket_pos + 1;
     size_t end_first_arg = comma_pos - 1;
     size_t begin_second_arg = comma_pos + 1;
@@ -124,23 +131,19 @@ int Tokenizer::is_func() {
     int pos = raw_string.find(func, index);
 
     if ((pos == index) && (raw_string[pos + 3] == '(')) {
-        //int comma_count = 0;//, open_br_count = 1, close_br_count = 0;
         size_t i;
         int comma_pos = -1, close_bracket_pos = 0, level = 1;
 
         for (i = pos + 4; i < raw_string.size(); i++) {
             if (raw_string[i] == ',') {
-                //comma_count++;
                 if (level == 1)
                     comma_pos = i;
             }
             if (raw_string[i] == '(') {
-                //open_br_count++;
                 level++;
             }
 
             if (raw_string[i] == ')') {
-                //close_br_count++;
                 level--;
                 close_bracket_pos = i;
             }
@@ -152,7 +155,6 @@ int Tokenizer::is_func() {
             return -1;
 
         //проверка на корректность аргументов 
-
         close_bracket_pos = check_args(comma_pos, pos + 3, close_bracket_pos);
         if (close_bracket_pos == -1)
             return -1;
@@ -173,6 +175,14 @@ void Tokenizer::add_bracket() {
     tokens.push_back(br);
 }
 
+bool Tokenizer::is_separator(char ch) {
+    return ch == 46;
+}
+
+bool Tokenizer::is_minus(char ch) {
+    return ch == 45;
+}
+
 bool Tokenizer::split() {
     index = 0;
     size_t open_bracket = 0;
@@ -181,12 +191,26 @@ bool Tokenizer::split() {
     while (true) {
         if (index >= raw_string.size())
             break;
-        if ((index == 0) && (is_operator(raw_string[index]) || is_close_bracket(raw_string[index])))
-            return false;
-
+        if (index == 0) {
+            if (!is_minus(raw_string[index]) && 
+                (is_close_bracket(raw_string[index]) || is_operator(raw_string[index])))
+                return false;
+        }
         if (is_space(raw_string[index])) {
             index++;
             continue;
+        }
+        if (is_minus(raw_string[index])) { //переделать для функции и учёт скобок
+            if (prev_lex == OP || prev_lex == BEGIN) {
+                if (is_number(raw_string[index + 1])) {
+                    index++;
+                    minus = true;
+                    add_num();
+                    prev_lex = NUM;
+                } else {
+                    return false;
+                }
+            }
         }
         else if (is_number(raw_string[index])) {
             if (prev_lex != OP && prev_lex != BEGIN && prev_lex != OPEN_BRAKET)
@@ -240,9 +264,6 @@ bool Tokenizer::split() {
     }
     if (tokens.size() < 3)
         return false;
-
-    for (string token : tokens)
-        cout << token << " ";
 
     return true;
 }

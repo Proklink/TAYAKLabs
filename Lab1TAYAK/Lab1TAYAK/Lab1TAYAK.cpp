@@ -9,11 +9,13 @@ using namespace std;
 
 int main()
 {
-
-
     Tokenizer tk;
     tk.get_source_string();
     bool ret = tk.split();
+
+    cout << "Tokens:\n";
+    for (string token : tk.tokens)
+        cout << token << endl;
     
     if (!ret) {
         cout << "split " << ret << endl;

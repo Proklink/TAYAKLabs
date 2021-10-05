@@ -6,6 +6,7 @@
 
 using namespace std;
 
+//структура для предыдущих лексем
 enum Lex {
     BEGIN,
     NUM,
@@ -16,17 +17,19 @@ enum Lex {
 };
 
 class Tokenizer {
-    string raw_string;
-    uint32_t index;
-    bool minus = false;
+    string raw_string; //исходная строка
+    uint32_t index; //текущий индекс
+    bool minus; //флаг была ли предыдущая лексема унарным минусом
 
-    Lex prev_lex;
+    Lex prev_lex; //предыдущая лексема
 public:
     vector<string> tokens;
 
-    Tokenizer() : index(0), raw_string(""), prev_lex(BEGIN) {}
+    Tokenizer() : index(0), raw_string(""), prev_lex(BEGIN), minus(false) {}
 
-    Tokenizer(string raw_str) : index(0), raw_string(raw_str), prev_lex(BEGIN) {}
+    Tokenizer(string raw_str) : index(0), raw_string(raw_str), prev_lex(BEGIN), minus(false) {}
+
+    void reset();
 
     bool get_source_string();
 

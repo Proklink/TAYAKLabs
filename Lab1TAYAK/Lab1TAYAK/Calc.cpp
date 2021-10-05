@@ -52,14 +52,21 @@ bool Calc::get_number(string& token) {
     return true;
 }
 
+//Парсим аргументы и вычисляем функцию
 bool Calc::get_func(string& token) {
-    int ret = token.find(func);
+    int ret;
+
+    ret = token.find(func);
     if (ret < 0)
         return false;
 
+    bool minus = false;
     int open_br = token.find('(');
     int comma = token.find(',');
     int close_br = token.find(')');
+
+    if (token[0] == '-')
+        minus = true;
 
     if (open_br < 0 || comma < 0 || close_br < 0)
         return false;
@@ -76,14 +83,20 @@ bool Calc::get_func(string& token) {
         return false;
     }
 
-    operands.push(key_func(arg1, arg2));
+    if (minus)
+        operands.push(-1 * key_func(arg1, arg2));
+    else 
+        operands.push(key_func(arg1, arg2));
+
     return true;
 }
 
+//Итерируемся по токенам, проверяем каждое на число, функцию, оператор или скобку
+//Вычисляем согласно обратной польской нотации
 double Calc::calculate() {
     for (int i = 0; i < tokens.size(); i++) {
         string token = tokens[i];
-
+        
         if (get_number(token)) {
             continue;
         } 
@@ -117,11 +130,13 @@ double Calc::calculate() {
         }
 
     }
+    //Если после цикла мы не затронули все операторы, проходим по оставшимся
     while (!operators.empty()) {
         if (!evaluate())
             throw "Error";
     }
 
+    //В конце концов операнд может остаться только один - ответ
     if (operands.size() > 1)
         throw "Error";
 

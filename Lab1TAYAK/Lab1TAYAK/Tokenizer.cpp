@@ -7,6 +7,13 @@ using namespace std;
 
 map<std::string, uint8_t> priorities = { {"+", 1}, {"-", 1}, {"*", 2}, {"/", 2}};
 
+void Tokenizer::reset() {
+    index = 0; 
+    raw_string = "";
+    prev_lex = BEGIN;
+    minus = false;
+}
+
 bool Tokenizer::get_source_string() {
     raw_string = "";
     string source = "";
@@ -74,10 +81,17 @@ bool Tokenizer::is_operator(char ch) {
 void Tokenizer::add_func(int end_func) {
     string sfunc = raw_string.substr(index, end_func - index + 1);
 
-    tokens.push_back(sfunc);
+    if (minus) {
+        tokens.push_back("-" + sfunc);
+        minus = false;
+    }
+    else {
+        tokens.push_back(sfunc);
+    }
     index = end_func + 1;
 }
 
+//Выделяем подстроки обоих аргументов, разбиваем их на токены этим же классом и вычисляем
 int Tokenizer::check_args(size_t comma_pos, size_t open_bracket_pos, size_t close_bracket_pos) {
     double first, second;
     size_t begin_first_arg = open_bracket_pos + 1;
@@ -85,12 +99,12 @@ int Tokenizer::check_args(size_t comma_pos, size_t open_bracket_pos, size_t clos
     size_t begin_second_arg = comma_pos + 1;
     size_t end_second_arg = close_bracket_pos - 1;
 
-    //��������� ������� ���������        ������ ������� ���    ����� ������� ���������
+    //подстрока первого аргумента        начало первого арг    конец второго аргумента
     string first_arg = raw_string.substr(begin_first_arg, end_first_arg - begin_first_arg + 1);
-    //��������� ������� ���������        
+    //подстрока второго аргумента        
     string second_arg = raw_string.substr(begin_second_arg, end_second_arg - begin_second_arg + 1);
 
-    //��������� ������ ��������
+    //вычисляем первый аргумент
     Tokenizer tokenizer(first_arg);
 
     if (!tokenizer.split())
@@ -103,7 +117,7 @@ int Tokenizer::check_args(size_t comma_pos, size_t open_bracket_pos, size_t clos
         return -1;
     }
 
-    //��������� ������ ��������
+    //вычисляем второй аргумент
     tokenizer = Tokenizer(second_arg);
     if (!tokenizer.split())
         return -1;
@@ -117,16 +131,26 @@ int Tokenizer::check_args(size_t comma_pos, size_t open_bracket_pos, size_t clos
 
     string first_arg_str = to_string(first);
     string second_arg_str = to_string(second);
-    //�������� ��������� ��� ���������� �������� �������������� ����������� ����������
+    //замещаем выражения для аргументов строчным представлением вычисленных аргументов
     raw_string.replace(begin_first_arg, end_first_arg - begin_first_arg + 1, first_arg_str);
     begin_second_arg = raw_string.find(',', begin_first_arg) + 1;
     end_second_arg = raw_string.find(')', begin_second_arg) - 1;
     raw_string.replace(begin_second_arg, end_second_arg - begin_second_arg + 1, second_arg_str);
 
-    //���������� ����� ������� ����������� ������
+    //возвращаем новую позицию закрывающей скобки
     return open_bracket_pos + first_arg_str.size() + 1 + second_arg_str.size() + 1;
 }
 
+//Проверка на функцию состоит из поиска после index подстроки названия фукнции func, определения 
+//запятой и скобок. Наличие запятой и соответствение количества открывающих и закрывающих скобок
+//проверяем уровнем вложенности в скобки.
+//Открывающая скобка повышает уровень, закрывающая - понижает. Так как идти по подстроке с 
+//аргументами фукнции мы начинаем со следующего символа после открывающей скобки, то мы сразу оказываемся
+//на уровне 1. Запятую мы должны искать на этом же уровне, а выйти из построки с аргументами должны 
+//на уровне 0.
+//Определив, индексы начала и конца аргументов, проверяем их на корректность фукнцией check_args
+//В случае успеха возвращаем позицию закрывающей скобки для того, чтобы потом продолжить итерацию
+//по исзодной строке в главном цикле со следующего символа за скобкой
 int Tokenizer::is_func() {
     int pos = raw_string.find(func, index);
 
@@ -154,7 +178,7 @@ int Tokenizer::is_func() {
         if (level != 0 || comma_pos == -1)
             return -1;
 
-        //�������� �� ������������ ���������� 
+        //проверка на корректность аргументов 
         close_bracket_pos = check_args(comma_pos, pos + 3, close_bracket_pos);
         if (close_bracket_pos == -1)
             return -1;
@@ -183,14 +207,26 @@ bool Tokenizer::is_minus(char ch) {
     return ch == 45;
 }
 
+
 bool Tokenizer::split() {
     index = 0;
     size_t open_bracket = 0;
     size_t close_bracket = 0;
 
+    //В цикле перебираем каждый символ. После каждой корректной лексемы, помещаем ее код в prev_lex,
+    //выделяем подстроку с лексемой, заносим её в вектор
+    // и смещаемся дальше по исходной строке
     while (true) {
         if (index >= raw_string.size())
             break;
+
+        //Перед концом строки может быть только число, закрывающая скобка и функция
+        if (index == raw_string.size() - 1)
+            if (prev_lex != NUM && prev_lex != CLOSE_BRAKET && prev_lex != FUNC)
+                return false;
+
+        //первым символом в выражении может быть только унарный минус, 
+        //цифра и открывающая скобка.
         if (index == 0) {
             if (!is_minus(raw_string[index]) && 
                 (is_close_bracket(raw_string[index]) || is_operator(raw_string[index])))
@@ -200,54 +236,67 @@ bool Tokenizer::split() {
             index++;
             continue;
         }
-        if (is_minus(raw_string[index])) { //���������� ��� ������� � ���� ������
-            if (prev_lex == OP || prev_lex == BEGIN) {
-                if (is_number(raw_string[index + 1])) {
-                    index++;
-                    minus = true;
-                    add_num();
-                    prev_lex = NUM;
-                } else {
-                    return false;
-                }
+        //проверка на унарный минус. Если предыдущая лексема - оператор, начало или открывающая скобка
+        //то минус может быть унарным, поэтому устанавливаем флаг
+        if (is_minus(raw_string[index])) {
+            if (minus)
+                return false;
+            if (prev_lex == OP || prev_lex == BEGIN || prev_lex == OPEN_BRAKET) {
+                minus = true;
+                index++;
             }
         }
-        else if (is_number(raw_string[index])) {
+        //Если очередной символ - цифра, то перед ней может быть только оператор,
+        //начало или открывающая скобка
+        if (is_number(raw_string[index])) {
             if (prev_lex != OP && prev_lex != BEGIN && prev_lex != OPEN_BRAKET)
                 return false;
             add_num();
             prev_lex = NUM;
         }
+        //Если встретили буквенный символ английского алфавита, то это может быть начало функции
+        //проверяем на вхождение функции и, если не функция, то значит - мусор
         else if (is_char(raw_string[index])) {
             int ret = is_func();
 
-            if (ret == -1 && prev_lex != OP)
+            if (ret == -1 && prev_lex != OP && prev_lex != BEGIN && prev_lex != OPEN_BRAKET)
                 return false;
 
             add_func(ret);
             prev_lex = FUNC;
         }
+        //если встретили операторный символ, то перед ним может быть только функция,
+        //число, начало, открывающая скобка. Перед оператором не может быть унарного минуса
         else if (is_operator(raw_string[index])) {
-            if (prev_lex != FUNC && prev_lex != NUM && prev_lex != BEGIN)
+            if ((prev_lex != FUNC && prev_lex != NUM && prev_lex != BEGIN && prev_lex != OPEN_BRAKET) || minus )
                 return false;
             prev_lex = OP;
             add_operator();
         } 
+        //если встретили открывающую скобку, то не должно быть перед ней унарного минуса
         else if (is_open_bracket(raw_string[index])) {
+            if (minus)
+                return false;
             open_bracket++;
             prev_lex = OPEN_BRAKET;
             add_bracket();
         }
+        //Если встретили закрывающую скобку, перед ней может быть только функция или число
         else if (is_close_bracket(raw_string[index])) {
+            if ((prev_lex != FUNC && prev_lex != NUM) || minus)
+                return false;
+
             close_bracket++;
             prev_lex = CLOSE_BRAKET;
             add_bracket();
         }
     }
 
+    //В выражении количество окрывающих скобок должно быть равно количеству закрывающих
     if (open_bracket != close_bracket)
         return false;
     
+    //В выражении может быть один токен: либо число, либо функция
     if (tokens.size() == 1) {
         try {
             double digit = stod(tokens[0]);

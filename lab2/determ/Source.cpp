@@ -105,9 +105,9 @@ public:
 	bool is_determ() {
 		for (const auto &nd_elem : state_machine_table)
 			if (nd_elem.second.size() > 1)
-				return -1;
+				return false;
 
-		return 0;
+		return true;
 	}
 
 	int str_check()

@@ -58,8 +58,24 @@ private:
     vector<string> pushdowns_tree;
     set<char> terms;
     set<char> nonTerms;
-    
+    vector<src_and_pd> chain;
+
 public:
+
+    void add_chain(src_and_pd sap, int &count, vector<src_and_pd> &chain) { 
+        string h0 = "h0";
+
+        sap.pushdown.insert(sap.pushdown.begin(), h0.begin(), h0.end());
+        if ((chain.empty()) || (chain.back().pushdown != sap.pushdown) || (chain.back().source != sap.source)) {
+            chain.push_back(sap);
+            count++;
+        }
+    }
+
+    void remove_chain(int shamt) {
+        for (int i = 0; i < shamt; i++)
+            chain.pop_back();
+    }
 
     bool is_nonTerm(char c) {
         return (c > 64 && c < 91);
@@ -71,7 +87,6 @@ public:
                 terms.insert(c);
             else
                 nonTerms.insert(c);
-
     }
 
     bool get_grammars(string &filename) {
@@ -128,29 +143,41 @@ public:
         return nodes;
     }
 
-    void check_line(source_line &line) {
-        //будем продвигаться по вектору всех вохможных магазинов, формируя его находу
-        //будем формировать след образом: B>a|c {aB, b} -> {aa, ac, b}
-        vector<src_and_pd> chain;
-        bool success = false;
-
-        if (check_pushdown(pushdowns_tree[0], line, chain, success))
-            cout << "String is right";
-        else 
-            cout << "String is wrong";
+    void print_chain() {
+        for (int i = 0; i < chain.size(); i++) {
+            if (i == chain.size() - 1)
+                chain[i].source = "A";
+            cout << "(s0, " <<  chain[i].source << ", " << chain[i].pushdown << ")" << endl;
+        }
+        cout << "(s0, " << "A, " << "A)" << endl;
     }
 
-    bool check_pushdown(string pushdown, source_line& line, vector<src_and_pd> &chain, bool &success) {
+    void check_line(source_line &line) {
+        //будем продвигаться по вектору всех возможных магазинов, формируя его находу
+        //будем формировать след образом: B>a|c {aB, b} -> {aa, ac, b}
+        bool success = false;
+
+        if (check_pushdown(pushdowns_tree[0], line, success)) {
+           cout << "String is right" << endl;
+           print_chain();
+        }
+        else 
+            cout << "String is wrong" << endl;
+    }
+
+    bool check_pushdown(string pushdown, source_line& line, bool &success) {
         //счетчик количества изменений исходной строки line
         int has_change = 0;
+        int chain_added_count = 0;
 
         for (int i = pushdown.size() - 1; i >= 0; i--) {
+            bool exit = true;
+
             //Если символ в магазине нетерминальный, 
             if (is_nonTerm(pushdown[i])) {
                 /*//то разложим данный магазин на несколько других, у которых начало будет совпадать
                 //символами магазина pushdown до pushdown[i]*/
                 vector<string> pushdowns = substitution_nonTerm(pushdown, i);
-                bool exit = false;
 
                 //Каждый из получившихся магазинов - новые ветви, которые мы перебором проверяем
                 for (string str : pushdowns) {
@@ -159,8 +186,10 @@ public:
                     if (str.size() > line.size()) {
                         exit = false;
                     } else {
+                        add_chain(src_and_pd(line.get_remains(), pushdown), chain_added_count, chain);
                         //Проверяем вновь получившийся магазин
-                        exit = check_pushdown(str, line, chain, success);
+                        exit = check_pushdown(str, line, success);
+                            
                     }
                     /*//поскольку эта функция возвращает bool, то в случае, если в каком то из 
                     //ответвлений вернётся true, перебор в данном цикле сразу завершается*/
@@ -176,19 +205,14 @@ public:
                 //были найдены совпаденя символов какого-нибудь из магазинов с исходной 
                 //строкой), то нам надо вернуть исходную строку к тому состоянию, которое
                 //она имела до обхода всех дочерних pushdowns.*/
-                if (!exit) {
-                    if (has_change)
-                        line.reset(has_change);
-                    return false;
-                }
+                
                 if (success)
                     break;
             } else {
                 if (pushdown[i] != line.get()) {
-                    if (has_change)
-                        line.reset(has_change);
-                    return false;
+                    exit = false;
                 } else {
+                    add_chain(src_and_pd(line.get_remains(), pushdown), chain_added_count, chain);
                     //Нашли совпадение. Стираем совпадающие символы из исходной строки
                     line.pop();
                     //и из магазина
@@ -197,6 +221,8 @@ public:
                     //"братские"(вершины дерева, имеющие общего родителя) узлы
                     //дерева вернут false*/
                     has_change++;
+
+                    add_chain(src_and_pd(line.get_remains(), pushdown), chain_added_count, chain);
 
                     /*//признак конца поиска - нулевые исходные строки и магазин, но чтобы выйти из
                     //, возможно, большого стэка рекурсивно вызванных функций, сделаем 
@@ -207,16 +233,18 @@ public:
                     }
 
                     if (line.is_empty() && !pushdown.empty()) {
-                        if (has_change)
-                            line.reset(has_change);
-                        return false;
+                        exit = false;
                     }
                 }
-
+            }
+            if (!exit) {
+                if (has_change) {
+                    line.reset(has_change);
+                }
+                remove_chain(chain_added_count);
+                return false;
             }
         }
-
-        chain.push_back(src_and_pd(line.get_remains(), pushdown));
         return true;
     }
 
@@ -227,11 +255,13 @@ public:
 int main() {
 
     pushdown_automaton pa;
-    string filename = "test2.txt";
-    source_line sourceline("1111111111a");
+    string filename("test4.txt");
+    source_line sourceline("a+a*a");
 
     pa.get_grammars(filename);
     pa.check_line(sourceline);
+
+  
 
     return 0;
 }

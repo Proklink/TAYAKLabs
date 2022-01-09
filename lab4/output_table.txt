@@ -1,0 +1,33 @@
+                                   '$'<program> || 'int''main''('')''{'||
+         '$''}'<statement>'{'')''(''main'<type> || 'int''main''('')''{'||
+          '$''}'<statement>'{'')''(''main''int' || 'int''main''('')''{'||
+               '$''}'<statement>'{'')''(''main' || 'main''('')''{'     ||
+                     '$''}'<statement>'{'')''(' || '('')''{'           ||
+                        '$''}'<statement>'{'')' || ')''{'              ||
+                           '$''}'<statement>'{' || '{'                 ||
+                              '$''}'<statement> || 'int''a''=''1'';'   ||
+              '$''}'<statement>';'<declaration> || 'int''a''=''1'';'   ||
+ '$''}'<statement>';'<assign><identifier><type> || 'int''a''=''1'';'   ||
+  '$''}'<statement>';'<assign><identifier>'int' || 'int''a''=''1'';'   ||
+       '$''}'<statement>';'<assign><identifier> || 'a''=''1'';'        ||
+'$''}'<statement>';'<assign><id_end><character> || 'a''=''1'';'        ||
+        '$''}'<statement>';'<assign><id_end>'a' || 'a''=''1'';'        ||
+           '$''}'<statement>';'<assign><id_end> || '=''1'';'           ||
+                   '$''}'<statement>';'<assign> || '=''1'';'           ||
+            '$''}'<statement>';'<assign_end>'=' || '=''1'';'           ||
+               '$''}'<statement>';'<assign_end> || '1'';'              ||
+                   '$''}'<statement>';'<number> || '1'';'              ||
+        '$''}'<statement>';'<number_end><digit> || '1'';'              ||
+            '$''}'<statement>';'<number_end>'1' || '1'';'              ||
+               '$''}'<statement>';'<number_end> || ';'                 ||
+                           '$''}'<statement>';' || ';'                 ||
+                              '$''}'<statement> || 'return''0'';'      ||
+                                 '$''}'<return> || 'return''0'';'      ||
+                      '$''}'';'<number>'return' || 'return''0'';'      ||
+                              '$''}'';'<number> || '0'';'              ||
+                   '$''}'';'<number_end><digit> || '0'';'              ||
+                       '$''}'';'<number_end>'0' || '0'';'              ||
+                          '$''}'';'<number_end> || ';'                 ||
+                                      '$''}'';' || ';'                 ||
+                                         '$''}' || '}''$'              ||
+                                            '$' || '$'                 ||

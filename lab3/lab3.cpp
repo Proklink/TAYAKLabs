@@ -251,17 +251,17 @@ public:
 };
 
 
-
 int main() {
 
     pushdown_automaton pa;
     string filename("test4.txt");
     source_line sourceline("a+a*a");
 
+    // string filename("test2.txt");
+    // source_line sourceline("1111d111111a");
+
     pa.get_grammars(filename);
     pa.check_line(sourceline);
-
-  
 
     return 0;
 }

@@ -174,7 +174,6 @@ public:
             else
                 nonTerms.insert(lexem);
         }
-
     }
 
     bool get_grammars(string &filename) {
@@ -650,6 +649,7 @@ int main() {
     
     an.tokenize(data, source_code_file);
     an.analyze(data);
+    cout << an.o_table << endl;
     an.print_output_table();
 
     return 0;

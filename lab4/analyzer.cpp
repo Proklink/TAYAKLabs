@@ -276,14 +276,6 @@ public:
                 set<string> temp_first_set;
                 string lex;
 
-                // while (pos < prod.size()) {
-                //     temp_first_set = FIRST(get_lex_next(prod, &pos));
-
-                //     if (temp_first_set.size() == 1 && *temp_first_set.begin() == "e") {
-                //         pos += prod.size();
-                //     } else
-                //         break;
-                // }
                 foreach_lexems(&pos, prod, lex) {
                     temp_first_set = FIRST(lex);
                     if (temp_first_set.size() == 1 && *temp_first_set.begin() == "e") {
@@ -462,14 +454,6 @@ public:
                 data_token token;
 
                 input >> token.token;
-                // input >> base;
-                // int pos = 0;
-                // string subterm; = get_term_from_str(base, pos);
-
-                // while (pos > base.size()) {
-
-                // }
-
 
                 token.token = "\'" + token.token + "\'";
                 token.num_row = row_count;
@@ -491,7 +475,7 @@ public:
             pushdown.pop();
         }
 
-        while (data[i].num_row < next_data_row && i < data.size()) {
+        while (i < data.size() && data[i].num_row < next_data_row) {
             token_colomn += data[i].token;
             i++;
         }
